@@ -79,13 +79,15 @@ Un exemple complet est dans [`exemples/carte-carburant.yaml`](exemples/carte-car
 
 La pastille de chaque prix, le comparatif et les lignes de la courbe prennent la couleur de la tranche du prix :
 
-| Tranche | Couleur | Code hex |
-| --- | --- | --- |
-| moins de 1,00 € | 🟢 Vert | `#4CAF50` |
-| 1,00 à 1,50 € | 🟠 Orange | `#FF9800` |
-| 1,50 à 2,00 € | 🟣 Violet | `#9C27B0` |
-| 2,00 à 2,50 € | 🩷 Magenta | `#E91E63` |
-| 2,50 € et plus | 🔴 Rouge | `#F44336` |
+| Tranche | Couleur | Code hex | Boule (notification) |
+| --- | --- | --- | --- |
+| moins de 1,00 € | Vert | `#4CAF50` | 🟢 |
+| 1,00 à 1,50 € | Orange | `#FF9800` | 🟠 |
+| 1,50 à 2,00 € | Violet | `#9C27B0` | 🟣 |
+| 2,00 à 2,50 € | Magenta | `#E91E63` | 🟤 |
+| 2,50 € et plus | Rouge | `#F44336` | 🔴 |
+
+Dans la carte, chaque pastille est une boule dessinée dans le code hex de sa tranche. La colonne « Boule » donne l'emoji le plus proche pour une notification : il n'existe pas d'emoji boule magenta, d'où 🟤.
 
 Pour les changer, donnez vos tranches dans `levels:`. Chacune s'applique jusqu'à son prix `max`, exclu ; au-delà de la dernière, sa couleur reste.
 
