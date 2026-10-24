@@ -22,16 +22,23 @@ ha-icon { display: inline-block; width: 20px; height: 20px; }
 <script src="../prix-carburant-card.js"></script>
 <script>
 const now = Date.now(), DAY = 86400e3;
-const base = { e85: 0.879, e10: 2.095, sp95: 2.179, sp98: 2.225, gazole: 2.380 };
-const labels = { e85: "E85", e10: "E10", sp95: "SP95", sp98: "SP98", gazole: "Gazole" };
-const attrs = (f) => ({ state_class: "measurement", station_id: "12345001", name: "Station Exemple", brand: "Exemple",
-  address: "Zone d'activité", postal_code: "00000", city: "Ville-Exemple", distance: 2.0,
-  updated_date: new Date(now - 26 * 3600e3).toISOString(), days_since_last_update: 1, fuel_type: labels[f], shortage_since: null,
-  unit_of_measurement: "€/l", friendly_name: "Station Exemple " + labels[f] });
+const labels = { e85: "E85", e10: "E10", sp95: "SP95", sp98: "SP98", gazole: "Gazole", gplc: "GPLc" };
+// Stations fictives : aucune donnée réelle
+const STATIONS = [
+  { id: "12345001", slug: "station_exemple", name: "Station Exemple", city: "Ville-Exemple", postal: "00000", address: "Zone d'activité", distance: 2.0,
+    prices: { gazole: 2.380, sp95: 2.179, e10: 2.095, sp98: 2.225, e85: 0.879 } },
+  { id: "12345002", slug: "relais_du_centre", name: "Relais du Centre", city: "Bourg-Exemple", postal: "00001", address: "Rue Principale", distance: 4.3,
+    prices: { gazole: 2.329, sp95: 2.199, e10: 2.069, sp98: 2.259, gplc: 1.079 } },
+  { id: "12345003", slug: "station_de_la_rocade", name: "Station de la Rocade", city: "Ville-Exemple", postal: "00000", address: "Rocade Nord", distance: 6.8,
+    prices: { gazole: 2.412, e10: 2.119, sp98: 2.289, e85: 0.899 } },
+];
 const states = {}, entities = {};
-for (const f in base) {
-  const id = "sensor.station_exemple_" + f;
-  states[id] = { entity_id: id, state: String(base[f]), attributes: attrs(f) };
+for (const st of STATIONS) for (const f in st.prices) {
+  const id = `sensor.${st.slug}_${f}`;
+  states[id] = { entity_id: id, state: String(st.prices[f]), attributes: { state_class: "measurement", station_id: st.id, name: st.name, brand: "Exemple",
+    address: st.address, postal_code: st.postal, city: st.city, distance: st.distance,
+    updated_date: new Date(now - 26 * 3600e3).toISOString(), days_since_last_update: 1, fuel_type: labels[f], shortage_since: null,
+    unit_of_measurement: "€/l", friendly_name: `${st.name} ${labels[f]}` } };
   entities[id] = { entity_id: id, platform: "prix_carburant" };
 }
 // historique simulé : un changement de prix tous les 2-3 jours
@@ -47,7 +54,7 @@ const hass = () => ({ states, entities, themes: { darkMode: dark },
   callApi: async (m, path) => { const q = decodeURIComponent(path.split("filter_entity_id=")[1].split("&")[0]).split(",");
     return q.map((id) => hist(id, Number(states[id].state))); } });
 const card = document.createElement("prix-carburant-card");
-let cfg = { type: "custom:prix-carburant-card", tank: 50, theme: "v2" };
+let cfg = { type: "custom:prix-carburant-card", favorite: "gazole", tank: 50, theme: "v2" };
 const p = new URLSearchParams(location.search);
 if (p.get("theme") === "auto-light") { dark = false; document.body.classList.add("light"); cfg.theme = "auto"; }
 card.setConfig(cfg); card.hass = hass();

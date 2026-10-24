@@ -1,32 +1,34 @@
 # Carte Prix Carburant
 
-Carte Lovelace pour Home Assistant qui affiche les **prix d'une station-service** : un prix par carburant avec une couleur selon vos seuils, l'évolution depuis le dernier changement, l'historique des 30 derniers jours, le coût d'un plein et les ruptures de stock.
+Carte Lovelace pour Home Assistant qui affiche les **prix de vos stations-service** : un comparatif de vos stations sur votre carburant favori, un prix par carburant avec une couleur selon vos seuils, l'évolution depuis le dernier changement, l'historique des 30 derniers jours, le coût d'un plein réglable et les ruptures de stock.
 
-Elle est conçue pour l'intégration **[Prix Carburant](https://github.com/Aohzan/hass-prixcarburant)** (données officielles prix-carburants.gouv.fr) et trouve votre station toute seule. Pour une autre source, les capteurs peuvent être choisis à la main.
+Elle est conçue pour l'intégration **[Prix Carburant](https://github.com/Aohzan/hass-prixcarburant)** (données officielles prix-carburants.gouv.fr) et trouve vos stations toute seule, quelle que soit l'enseigne. Pour une autre source, les capteurs peuvent être choisis à la main.
 
 Elle a le même style que la [Carte Enedis Linky New](https://github.com/Marlboro62/content-card-linky-new), mais elle est **indépendante** : type `custom:prix-carburant-card`, ressource à part.
 
 🎮 **[Essayer la démo en ligne](https://marlboro62.github.io/prix-carburant-card/docs/demo.html)** : la vraie carte avec des données simulées, sans installer Home Assistant.
 
-| Bleu nuit | Clair | Rupture, baisse de prix (téléphone) |
+| Bleu nuit | Clair | Autre station, plein en SP98 de 55 L (téléphone) |
 | --- | --- | --- |
 | ![Bleu nuit](images/station-sombre.png) | ![Clair](images/station-clair.png) | ![Rupture](images/rupture-telephone.png) |
 
-*Aperçus avec une station fictive, des prix et un historique simulés.*
+*Aperçus avec trois stations fictives, des prix et un historique simulés.*
 
 ## Ce que la carte affiche
 
-- **En-tête** : logo de l'enseigne, nom, adresse et distance de la station, et une **pastille** qui indique quand la station a mis ses prix à jour (orange au-delà de 3 jours).
+- **En-tête** : logo de l'enseigne, nom, adresse et distance de la station affichée, et une **pastille** qui indique quand la station a mis ses prix à jour (orange au-delà de 3 jours).
+- **Comparatif de vos stations** (dès 2 stations) : le prix de votre **carburant favori** dans chaque station, de la moins chère à la plus chère, avec l'écart en centimes (« non vendu » ou « rupture » si besoin). Touchez une station pour afficher ses prix.
 - **Une tuile par carburant** (Gazole, SP95, SP95-E10, SP98, E85, GPLc) :
   - le prix au millième, avec la couleur habituelle du carburant ;
   - une **pastille de couleur** selon vos seuils : 🟢 sous 1,50 €, 🟠 de 1,50 à 2 €, 🔴 à partir de 2 € (réglables) ;
   - l'**écart avec le prix précédent**, en centimes (▲ hausse, ▼ baisse) ;
   - **« Rupture depuis… »** quand la station est en rupture de stock ;
+  - une étoile **★** sur votre carburant favori, toujours en tête ;
   - un badge **€** sur le carburant le moins cher de la station.
-- **Coût d'un plein**, si vous indiquez la capacité de votre réservoir.
+- **Coût d'un plein** : choisissez le **carburant du plein** et la **capacité du réservoir** (− / +, par 5 L) directement dans la carte. Ces deux choix sont retenus sur l'appareil.
 - **Évolution du prix** sur 30 jours du carburant choisi (touchez une tuile), avec le minimum, le maximum et les lignes de vos seuils.
 
-Un appui sur l'en-tête, le plein ou la courbe ouvre la fiche du capteur.
+Un appui sur la pastille, le plein ou la courbe ouvre la fiche du capteur.
 
 ## Installation
 
@@ -46,22 +48,27 @@ Un appui sur l'en-tête, le plein ou la courbe ouvre la fiche du capteur.
 
 ## Configuration
 
-Avec une seule station dans l'intégration Prix Carburant, rien à configurer :
+Rien d'obligatoire : la carte affiche toutes les stations de l'intégration Prix Carburant.
 
 ```yaml
 type: custom:prix-carburant-card
+favorite: gazole
+tank: 50
 ```
 
-La carte prend la première station de l'intégration. S'il y en a plusieurs, choisissez-la dans l'**éditeur visuel** (champ `station`) : une carte par station.
+Pour comparer d'autres stations, ajoutez-les dans l'intégration (**Paramètres → Appareils et services → Prix Carburant → Configurer**), puis cochez celles à afficher dans l'**éditeur visuel** (champ `stations`).
 
 | Option | Rôle | Défaut |
 | --- | --- | --- |
-| `station` | Identifiant de la station (attribut `station_id` des capteurs) | la première trouvée |
-| `title` | Titre de la carte | nom de la station |
+| `stations` | Stations affichées : identifiants (attribut `station_id` des capteurs) | toutes |
+| `title` | Titre de la carte (avec une seule station) | nom de la station |
+| `favorite` | Carburant favori : en tête, marqué ★, comparé entre les stations | — |
 | `fuels` | Carburants affichés, dans l'ordre : `gazole`, `sp95`, `e10`, `sp98`, `e85`, `gplc` | tous |
 | `threshold_orange` | Prix (€/L) à partir duquel la pastille passe à l'orange | `1.5` |
 | `threshold_red` | Prix (€/L) à partir duquel la pastille passe au rouge | `2.0` |
-| `tank` | Capacité du réservoir en litres, pour le coût d'un plein (`0` = masqué) | `0` |
+| `show_tank` | Afficher le coût d'un plein | `true` |
+| `tank` | Capacité du réservoir par défaut, en litres (modifiable dans la carte) | `50` |
+| `tank_fuel` | Carburant du plein par défaut (modifiable dans la carte) | le favori |
 | `days` | Durée de l'historique (2 à 90 jours) | `30` |
 | `show_chart` | Afficher l'évolution du prix | `true` |
 | `theme` | `v2` (bleu nuit MyElectricalData), `auto` (clair ou sombre selon HA), `ha` (thème Home Assistant) | `v2` |
