@@ -3,8 +3,12 @@ type: custom:prix-carburant-card
 stations: ["12345001", "12345002"]   # stations affichées (attribut station_id) ; toutes par défaut
 favorite: gazole             # carburant favori : en tête et comparé entre les stations
 fuels: [gazole, sp95, e10, sp98, e85]   # carburants affichés, dans cet ordre (tous par défaut)
-threshold_orange: 1.5        # orange à partir de 1,50 €/L
-threshold_red: 2.0           # rouge à partir de 2,00 €/L
+levels:                      # tranches de couleur : chacune jusqu'à son prix max (exclu)
+  - { max: 1.0, color: "#4CAF50" }   # vert
+  - { max: 1.5, color: "#FF9800" }   # orange
+  - { max: 2.0, color: "#9C27B0" }   # violet
+  - { max: 2.5, color: "#E91E63" }   # magenta
+  - { max: 3.0, color: "#F44336" }   # rouge (et au-delà)
 show_tank: true              # coût d'un plein
 tank: 50                     # réservoir par défaut, en litres (réglable dans la carte)
 tank_fuel: gazole            # carburant du plein par défaut (réglable dans la carte)

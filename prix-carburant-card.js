@@ -11,7 +11,7 @@
  */
 
 (() => {
-const CARD_VERSION = "0.2.0";
+const CARD_VERSION = "0.3.0";
 
 /* ------------------------------------------------------------- affichage */
 
@@ -65,14 +65,32 @@ const FUEL_DEFAULTS = {
   stations: [],
   fuels: [],
   favorite: "",
-  threshold_orange: 1.5,
-  threshold_red: 2.0,
+  levels: null,
   tank: 50,
   tank_fuel: "",
   days: 30,
   show_chart: true,
   show_tank: true,
   theme: "v2",
+};
+
+/** Tranches de prix (€/L) : couleur jusqu'au prix « max » exclu ; au-delà de la dernière, sa couleur reste. */
+const DEFAULT_LEVELS = [
+  { max: 1.0, color: "#4CAF50", name: "Vert" },
+  { max: 1.5, color: "#FF9800", name: "Orange" },
+  { max: 2.0, color: "#9C27B0", name: "Violet" },
+  { max: 2.5, color: "#E91E63", name: "Magenta" },
+  { max: 3.0, color: "#F44336", name: "Rouge" },
+];
+
+/** Tranches de la configuration (levels:), triées ; les tranches par défaut sinon. */
+const levelsOf = (c) => {
+  const list = (Array.isArray(c.levels) ? c.levels : [])
+    .map((l) => ({ max: Number(l?.max), color: String(l?.color || "").trim(), name: l?.name || "" }))
+    .filter((l) => Number.isFinite(l.max) && /^#?[0-9a-f]{3,8}$|^[a-z]+$/i.test(l.color))
+    .map((l) => ({ ...l, color: /^[0-9a-f]{3,8}$/i.test(l.color) ? `#${l.color}` : l.color }))
+    .sort((a, b) => a.max - b.max);
+  return list.length ? list : DEFAULT_LEVELS;
 };
 
 /** Carburants dans l'ordre d'affichage. key : valeur de l'attribut fuel_type (en minuscules). */
@@ -201,12 +219,11 @@ class PrixCarburantCard extends HTMLElement {
     return Number.isFinite(n) && n > 0 ? n : null;
   }
 
-  _level(p) {
-    const c = this._config;
-    if (p === null) return "none";
-    if (p >= Number(c.threshold_red)) return "red";
-    if (p >= Number(c.threshold_orange)) return "orange";
-    return "green";
+  /** Couleur de la tranche d'un prix (null sans prix). */
+  _levelColor(p) {
+    if (p === null) return null;
+    const lv = levelsOf(this._config);
+    return (lv.find((l) => p < l.max) || lv[lv.length - 1]).color;
   }
 
   /** Historique des prix (API history/period), rechargé toutes les 30 minutes. */
@@ -274,11 +291,11 @@ class PrixCarburantCard extends HTMLElement {
     const area = `${d}V${H}H0Z`;
     const iMin = vals.indexOf(min);
     const iMax = vals.lastIndexOf(max);
-    const lines = [
-      [Number(this._config.threshold_orange), "orange"],
-      [Number(this._config.threshold_red), "red"],
-    ].filter(([v]) => v > lo && v < hi)
-      .map(([v, k]) => `<line class="th th-${k}" x1="0" x2="${W}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>`).join("");
+    // limite basse de chaque tranche (sa couleur), quand elle tombe dans l'échelle de la courbe
+    const lv = levelsOf(this._config);
+    const lines = lv.slice(0, -1).map((l, i) => [l.max, lv[i + 1].color])
+      .filter(([v]) => v > lo && v < hi)
+      .map(([v, col]) => `<line class="th" stroke="${esc(col)}" x1="0" x2="${W}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>`).join("");
     return `<div class="chart" data-entity="${esc(id)}">${head}<span class="legend">min <b>${fmt(min, 3)}</b> · max <b>${fmt(max, 3)}</b></span></div>
       <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="Évolution du prix ${esc(fuel.label)}">
         <defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${fuel.color}" stop-opacity=".35"/><stop offset="1" stop-color="${fuel.color}" stop-opacity="0"/></linearGradient></defs>
@@ -349,7 +366,8 @@ class PrixCarburantCard extends HTMLElement {
         list.map(({ s, r }) => {
           const at = s.rows[0]?.st?.attributes || {};
           const short = r?.st?.attributes?.shortage_since;
-          const val = !r ? `<span class="c-na">non vendu</span>` : short ? `<span class="c-na">rupture</span>` : r.price === null ? "—" : `<b>${fmt(r.price, 3)} €</b>`;
+          const col = okPrice(r) ? this._levelColor(r.price) : null;
+          const val = !r ? `<span class="c-na">non vendu</span>` : short ? `<span class="c-na">rupture</span>` : r.price === null ? "—" : `<b>${col ? `<i class="dot" style="background:${esc(col)}"></i>` : ""}${fmt(r.price, 3)} €</b>`;
           const gap = okPrice(r) && best !== null && r.price - best > 0.0005 ? `<small>+${fmt((r.price - best) * 100, 1)} c</small>` : okPrice(r) && prices.length > 1 ? `<small class="c-best">le moins cher</small>` : "";
           return `<button class="c-row${s === cur ? " on" : ""}" data-station="${esc(s.id)}" style="--fc:${fuel.color}">${logoOf(at, "c-logo")}` +
             `<span class="c-n">${esc(at.name || s.name || s.id)}<em>${esc([at.city, at.distance !== undefined && at.distance !== null ? `${fmt(at.distance, 1)} km` : ""].filter(Boolean).join(" · "))}</em></span>` +
@@ -359,14 +377,14 @@ class PrixCarburantCard extends HTMLElement {
 
     const tiles = rows.map((r) => {
       const short = r.st.attributes.shortage_since;
-      const lvl = short ? "none" : this._level(r.price);
+      const col = short ? null : this._levelColor(r.price);
       const prev = this._previous(r.id, r.price);
       const diff = prev ? r.price - prev.v : null;
       const evo = diff === null
         ? ""
         : `<div class="evo ${diff > 0 ? "up" : "down"}" title="Avant : ${fmt(prev.v, 3)} € (${esc(new Date(prev.t).toLocaleString("fr-FR"))})">${diff > 0 ? "▲" : "▼"} ${fmt(Math.abs(diff) * 100, 1)} c</div>`;
-      return `<button class="fuel lv-${lvl}${r === sel ? " on" : ""}${r.fuel.key === fav ? " fav" : ""}" data-pick="${esc(r.fuel.key)}" style="--fc:${r.fuel.color}">
-          <div class="f-h"><span class="f-tag">${r.fuel.key === fav ? "★ " : ""}${esc(r.fuel.short)}</span><span class="dot"></span></div>
+      return `<button class="fuel${r === sel ? " on" : ""}${r.fuel.key === fav ? " fav" : ""}" data-pick="${esc(r.fuel.key)}" style="--fc:${r.fuel.color}">
+          <div class="f-h"><span class="f-tag">${r.fuel.key === fav ? "★ " : ""}${esc(r.fuel.short)}</span><span class="dot"${col ? ` style="background:${esc(col)}"` : ""}></span></div>
           <div class="f-v">${short ? `<em>Rupture</em>` : r.price !== null ? `${fmt(r.price, 3)}<span>€</span>` : "—"}</div>
           <div class="f-n">${short ? `depuis ${dayMonth(new Date(short).getTime())}` : evo || `<span>${esc(r.fuel.label)}</span>`}</div>
           ${r === cheapest && avail.length > 1 ? `<b class="best" title="Le moins cher de la station">€</b>` : ""}
@@ -388,7 +406,11 @@ class PrixCarburantCard extends HTMLElement {
         </div>`;
     }
 
-    const legend = `<div class="seuils"><span><i class="dot lv-green"></i>moins de ${fmt(c.threshold_orange, 2)} €</span><span><i class="dot lv-orange"></i>${fmt(c.threshold_orange, 2)} à ${fmt(c.threshold_red, 2)} €</span><span><i class="dot lv-red"></i>${fmt(c.threshold_red, 2)} € et plus</span></div>`;
+    const lv = levelsOf(c);
+    const legend = `<div class="seuils">${lv.map((l, i) => {
+      const txt = i === 0 ? `moins de ${fmt(l.max, 2)} €` : i === lv.length - 1 ? `${fmt(lv[i - 1].max, 2)} € et plus` : `${fmt(lv[i - 1].max, 2)} à ${fmt(l.max, 2)} €`;
+      return `<span><i class="dot" style="background:${esc(l.color)}"></i>${txt}</span>`;
+    }).join("")}</div>`;
 
     card(`${header}
       ${compare}
@@ -419,10 +441,7 @@ ha-card.light .f-tag { color: color-mix(in srgb, var(--fc) 65%, #1a2434); }
 .f-v span { font-size: .85rem; font-weight: 500; color: var(--med-muted); margin-left: 2px; }
 .f-v em { font-style: normal; font-size: 1.05rem; color: var(--t-red); }
 .f-n { font-size: .74rem; color: var(--med-muted); min-height: 1.1em; }
-.lv-green .dot, .dot.lv-green { background: var(--med-down); }
-.lv-orange .dot, .dot.lv-orange { background: #f0a33a; }
-.lv-red .dot, .dot.lv-red { background: var(--t-red); }
-.lv-none .dot { background: var(--med-muted); }
+.c-v .dot { width: 8px; height: 8px; margin-right: 6px; vertical-align: 1px; }
 .evo { font-size: .74rem; font-weight: 600; }
 .evo.up { color: var(--med-up); } .evo.down { color: var(--med-down); }
 .best { position: absolute; top: -7px; right: -5px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
@@ -460,8 +479,7 @@ svg.c-logo { background: none; padding: 0; fill: none; }
 .chart .legend b { color: var(--med-text); font-weight: 600; }
 .chart svg { height: 110px; }
 .chart .line { fill: none; stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
-.chart .th { stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
-.chart .th-orange { stroke: #f0a33a; opacity: .7; } .chart .th-red { stroke: var(--t-red); opacity: .7; }
+.chart .th { stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; opacity: .75; }
 .chart .pt-min { fill: var(--med-down); } .chart .pt-max { fill: var(--med-up); }
 .ch-x { display: flex; justify-content: space-between; font-size: .68rem; color: var(--med-muted); margin: 3px 4px 0; }
 .ch-empty { margin: 0 4px; padding: 18px 0; text-align: center; font-size: .8rem; color: var(--med-muted); border: 1px dashed var(--med-line); border-radius: 12px; }
@@ -544,8 +562,7 @@ const FUEL_SCHEMA = (hass) => {
     { name: "title", selector: { text: {} } },
     { name: "favorite", selector: { select: { mode: "dropdown", options: [{ value: "", label: "Aucun" }, ...fuelOpts] } } },
     { name: "fuels", selector: { select: { multiple: true, mode: "list", options: fuelOpts } } },
-    { name: "threshold_orange", selector: { number: { min: 0, max: 5, step: 0.01, mode: "box", unit_of_measurement: "€/L" } } },
-    { name: "threshold_red", selector: { number: { min: 0, max: 5, step: 0.01, mode: "box", unit_of_measurement: "€/L" } } },
+    { name: "levels", selector: { object: {} } },
     { name: "show_tank", selector: { boolean: {} } },
     { name: "tank", selector: { number: { min: 5, max: 200, step: 1, mode: "box", unit_of_measurement: "L" } } },
     { name: "tank_fuel", selector: { select: { mode: "dropdown", options: [{ value: "", label: "Le favori (ou le carburant affiché)" }, ...fuelOpts] } } },
@@ -559,8 +576,7 @@ const FUEL_LABELS = {
   favorite: "Carburant favori (en tête, comparé entre les stations)",
   title: "Titre (nom de la station par défaut)",
   fuels: "Carburants affichés (tous si aucun n'est coché)",
-  threshold_orange: "Orange à partir de",
-  threshold_red: "Rouge à partir de",
+  levels: "Tranches de couleur (vide = vert, orange, violet, magenta, rouge ; voir le README)",
   show_tank: "Afficher le coût d'un plein",
   tank: "Réservoir par défaut (modifiable dans la carte)",
   tank_fuel: "Carburant du plein par défaut (modifiable dans la carte)",
