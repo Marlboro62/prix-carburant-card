@@ -1,0 +1,11 @@
+# Carte Prix Carburant : exemple complet (toutes les options sont facultatives)
+type: custom:prix-carburant-card
+station: "12345001"          # identifiant de la station (attribut station_id) ; la première station sinon
+title: Ma station          # nom de la station par défaut
+fuels: [gazole, sp95, e10, sp98, e85]   # carburants affichés, dans cet ordre (tous par défaut)
+threshold_orange: 1.5        # orange à partir de 1,50 €/L
+threshold_red: 2.0           # rouge à partir de 2,00 €/L
+tank: 50                     # coût d'un plein de 50 L (0 = masqué)
+days: 30                     # historique affiché
+show_chart: true
+theme: v2                    # v2 (bleu nuit), auto (clair ou sombre selon HA), ha (thème Home Assistant)

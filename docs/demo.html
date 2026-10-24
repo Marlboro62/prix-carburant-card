@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Carte Prix Carburant — démo</title>
+<style>
+:root { color-scheme: dark; }
+body { margin: 0; padding: 24px 16px; background: #111823; font-family: Roboto, "Segoe UI", system-ui, sans-serif; color: #e7edf5; }
+body.light { background: #eef2f7; color: #1a2434; color-scheme: light; }
+.wrap { max-width: 520px; margin: 0 auto; display: grid; gap: 16px; }
+.bar { display: flex; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+button { padding: 6px 12px; border-radius: 8px; border: 1px solid #2f3d55; background: #212d40; color: inherit; cursor: pointer; }
+body.light button { background: #fff; border-color: #dbe2ec; }
+ha-icon { display: inline-block; width: 20px; height: 20px; }
+</style></head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <button data-theme="v2">Bleu nuit</button><button data-theme="auto-light">Clair</button>
+    <button data-act="rupture">Simuler une rupture E10</button><button data-act="baisse">Baisse du gazole</button>
+  </div>
+  <div id="host"></div>
+</div>
+<script src="../prix-carburant-card.js"></script>
+<script>
+const now = Date.now(), DAY = 86400e3;
+const base = { e85: 0.879, e10: 2.095, sp95: 2.179, sp98: 2.225, gazole: 2.380 };
+const labels = { e85: "E85", e10: "E10", sp95: "SP95", sp98: "SP98", gazole: "Gazole" };
+const attrs = (f) => ({ state_class: "measurement", station_id: "12345001", name: "Station Exemple", brand: "Exemple",
+  address: "Zone d'activité", postal_code: "00000", city: "Ville-Exemple", distance: 2.0,
+  updated_date: new Date(now - 26 * 3600e3).toISOString(), days_since_last_update: 1, fuel_type: labels[f], shortage_since: null,
+  unit_of_measurement: "€/l", friendly_name: "Station Exemple " + labels[f] });
+const states = {}, entities = {};
+for (const f in base) {
+  const id = "sensor.station_exemple_" + f;
+  states[id] = { entity_id: id, state: String(base[f]), attributes: attrs(f) };
+  entities[id] = { entity_id: id, platform: "prix_carburant" };
+}
+// historique simulé : un changement de prix tous les 2-3 jours
+function hist(id, cur) {
+  const rows = []; let v = cur + 0.06, t = now - 30 * DAY; let seed = id.length;
+  while (t < now - DAY) { rows.push({ entity_id: id, state: String(v.toFixed(3)), last_changed: new Date(t).toISOString() });
+    seed = (seed * 9301 + 49297) % 233280; v += ((seed / 233280) - 0.62) * 0.03; t += (2 + (seed % 2)) * DAY; }
+  rows.push({ entity_id: id, state: String(cur), last_changed: new Date(now - DAY).toISOString() });
+  return rows;
+}
+let dark = true;
+const hass = () => ({ states, entities, themes: { darkMode: dark },
+  callApi: async (m, path) => { const q = decodeURIComponent(path.split("filter_entity_id=")[1].split("&")[0]).split(",");
+    return q.map((id) => hist(id, Number(states[id].state))); } });
+const card = document.createElement("prix-carburant-card");
+let cfg = { type: "custom:prix-carburant-card", tank: 50, theme: "v2" };
+const p = new URLSearchParams(location.search);
+if (p.get("theme") === "auto-light") { dark = false; document.body.classList.add("light"); cfg.theme = "auto"; }
+card.setConfig(cfg); card.hass = hass();
+document.getElementById("host").appendChild(card);
+document.querySelector(".bar").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.theme) { dark = b.dataset.theme === "v2"; document.body.classList.toggle("light", !dark); cfg = { ...cfg, theme: dark ? "v2" : "auto" }; card.setConfig(cfg); }
+  if (b.dataset.act === "rupture") { const s = states["sensor.station_exemple_e10"]; s.attributes = { ...s.attributes, shortage_since: new Date(now - 2 * DAY).toISOString() }; s.state = "unknown"; }
+  if (b.dataset.act === "baisse") { states["sensor.station_exemple_gazole"] = { ...states["sensor.station_exemple_gazole"], state: "1.949" }; }
+  card.hass = hass();
+});
+</script></body></html>
