@@ -38,7 +38,7 @@ Elle a le même style que la [Carte Enedis Linky New](https://github.com/Marlbor
 
 | Bleu nuit | Clair | Autre station, plein en SP98 de 55 L (téléphone) |
 | --- | --- | --- |
-| ![Bleu nuit](images/station-sombre.png) | ![Clair](images/station-clair.png) | ![Rupture](images/rupture-telephone.png) |
+| ![Bleu nuit](https://raw.githubusercontent.com/Marlboro62/prix-carburant-card/main/images/station-sombre.png) | ![Clair](https://raw.githubusercontent.com/Marlboro62/prix-carburant-card/main/images/station-clair.png) | ![Rupture](https://raw.githubusercontent.com/Marlboro62/prix-carburant-card/main/images/rupture-telephone.png) |
 
 *Aperçus avec trois stations fictives, des prix et un historique simulés.*
 
@@ -101,7 +101,7 @@ Pour comparer d'autres stations, ajoutez-les dans l'intégration (**Paramètres 
 | `theme` | `v2` (bleu nuit MyElectricalData), `auto` (clair ou sombre selon HA), `ha` (thème Home Assistant) | `v2` |
 | `entities` | Capteurs choisis à la main (voir ci-dessous) | — |
 
-Un exemple complet est dans [`exemples/carte-carburant.yaml`](exemples/carte-carburant.yaml).
+Un exemple complet est dans [`exemples/carte-carburant.yaml`](https://github.com/Marlboro62/prix-carburant-card/blob/main/exemples/carte-carburant.yaml).
 
 ### Tranches de couleur
 
