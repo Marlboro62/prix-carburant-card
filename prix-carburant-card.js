@@ -11,7 +11,7 @@
  */
 
 (() => {
-const CARD_VERSION = "0.3.1";
+const CARD_VERSION = "0.4.0-beta.1";
 
 /* ------------------------------------------------------------- affichage */
 
@@ -425,15 +425,15 @@ const FUEL_STYLE = `<style>
 ha-card { display: block; padding-bottom: 12px; }
 .brand .logo { width: 34px; height: 34px; border-radius: 8px; background: #fff; padding: 3px; box-sizing: border-box; object-fit: contain; }
 .pump { fill: none; stroke: var(--med-green); stroke-width: 2.2; }
-.win { fill: var(--med-blue); }
-.hose { fill: none; stroke: var(--med-blue); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.win { fill: var(--med-accent, var(--med-blue)); }
+.hose { fill: none; stroke: var(--med-accent, var(--med-blue)); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .pill.up-ok .dot { background: var(--med-down); }
 .pill.up-old { border-color: #f0a33a; } .pill.up-old .dot { background: #f0a33a; }
 .fuels { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 8px; margin: 6px 12px 0; }
 .fuel { all: unset; box-sizing: border-box; position: relative; cursor: pointer; padding: 10px 12px; border-radius: 14px;
   background: var(--med-surface); border: 1px solid var(--med-line); border-top: 3px solid var(--fc); transition: border-color .15s, background .15s; }
 .fuel.on { border-color: var(--fc); background: color-mix(in srgb, var(--fc) 10%, var(--med-surface)); }
-.fuel:focus-visible { outline: 2px solid var(--med-blue); }
+.fuel:focus-visible { outline: 2px solid var(--med-accent, var(--med-blue)); }
 .f-h { display: flex; align-items: center; justify-content: space-between; }
 .f-tag { font-size: .78rem; font-weight: 700; letter-spacing: .3px; color: var(--fc); }
 ha-card.light .f-tag { color: color-mix(in srgb, var(--fc) 65%, #1a2434); }
@@ -451,7 +451,7 @@ ha-card.light .f-tag { color: color-mix(in srgb, var(--fc) 65%, #1a2434); }
 .c-row { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 12px; cursor: pointer; border: 1px solid transparent; }
 .c-row:hover { background: var(--med-surface); }
 .c-row.on { background: var(--med-surface); border-color: var(--med-line); }
-.c-row:focus-visible { outline: 2px solid var(--med-blue); }
+.c-row:focus-visible { outline: 2px solid var(--med-accent, var(--med-blue)); }
 .c-logo { width: 26px; height: 26px; border-radius: 6px; background: #fff; padding: 2px; box-sizing: border-box; object-fit: contain; flex: none; }
 svg.c-logo { background: none; padding: 0; fill: none; }
 .c-n { flex: 1; min-width: 0; font-size: .86rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -469,7 +469,7 @@ svg.c-logo { background: none; padding: 0; fill: none; }
 .p-fuels { display: flex; flex-wrap: wrap; gap: 4px; }
 .p-f { all: unset; cursor: pointer; padding: 3px 9px; border-radius: 999px; font-size: .74rem; font-weight: 700; border: 1px solid var(--med-line); color: var(--med-muted); }
 .p-f.on { border-color: var(--fc); color: var(--med-text); background: color-mix(in srgb, var(--fc) 18%, transparent); }
-.p-f:focus-visible, .p-step button:focus-visible { outline: 2px solid var(--med-blue); }
+.p-f:focus-visible, .p-step button:focus-visible { outline: 2px solid var(--med-accent, var(--med-blue)); }
 .p-step { display: flex; align-items: center; gap: 2px; border: 1px solid var(--med-line); border-radius: 999px; padding: 2px; }
 .p-step button { all: unset; cursor: pointer; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 1rem; font-weight: 700; color: var(--med-text); }
 .p-step button:hover { background: var(--med-surface); }
@@ -517,6 +517,9 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .empty span { color: var(--med-muted); }
 /* Thème Home Assistant : fond, textes et bordures suivent le thème clair ou sombre */
 ha-card.th-ha {
+  /* accent (icônes, onglets, sélections, contours) : couleur principale du thème ; les bleus porteurs de sens restent bleus */
+  --med-accent: var(--primary-color, #1d93e3);
+  --med-on-accent: var(--text-primary-color, #fff);
   --med-bg: var(--ha-card-background, var(--card-background-color, #fff));
   --med-surface: color-mix(in srgb, var(--primary-text-color, #000) 5%, transparent);
   --med-line: var(--divider-color, rgba(127, 127, 127, .25));
