@@ -62,9 +62,10 @@ Un appui sur la pastille, le plein ou la courbe ouvre la fiche du capteur.
 
 ### Avec HACS (recommandé)
 
-1. Dans HACS, menu **⋮** → **Dépôts personnalisés**.
-2. Ajoutez `https://github.com/Marlboro62/prix-carburant-card` avec le type **Tableau de bord** (Dashboard).
-3. Cherchez **Carte Prix Carburant**, installez-la, puis rechargez la page (Ctrl+F5).
+1. Dans HACS, cherchez **Carte Prix Carburant** et installez-la.
+2. Rechargez la page (Ctrl+F5).
+
+Si la carte n'apparaît pas encore dans la recherche de HACS, ajoutez le dépôt à la main : menu **⋮** → **Dépôts personnalisés**, adresse `https://github.com/Marlboro62/prix-carburant-card`, type **Tableau de bord** (Dashboard), puis cherchez **Carte Prix Carburant**.
 
 ### Manuellement
 
