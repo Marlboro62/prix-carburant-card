@@ -11,7 +11,7 @@
  */
 
 (() => {
-const CARD_VERSION = "0.4.2-beta.1";
+const CARD_VERSION = "0.4.2-beta.2";
 
 /* ------------------------------------------------------------- affichage */
 
@@ -401,7 +401,8 @@ class PrixCarburantCard extends HTMLElement {
           <div class="p-top" data-entity="${esc(tf.id)}"><ha-icon icon="mdi:gas-station-outline"></ha-icon><span>Plein de ${fmt(tank, 0)} L en ${esc(tf.fuel.label)}</span><b>${fmt(tf.price * tank, 2)} €</b></div>
           <div class="p-ctl">
             <div class="p-fuels">${avail.map((r) => `<button class="p-f${r === tf ? " on" : ""}" data-tankfuel="${esc(r.fuel.key)}" style="--fc:${r.fuel.color}" aria-pressed="${r === tf}">${esc(r.fuel.short)}</button>`).join("")}</div>
-            <div class="p-step"><button data-tank="-5" aria-label="Réservoir moins 5 litres">−</button><span>${fmt(tank, 0)} L</span><button data-tank="5" aria-label="Réservoir plus 5 litres">+</button></div>
+            <div class="p-tank"><span><ha-icon icon="mdi:fuel"></ha-icon>Réservoir</span>
+              <div class="p-step"><button data-tank="-5" aria-label="Réservoir moins 5 litres">−</button><span>${fmt(tank, 0)} L</span><button data-tank="5" aria-label="Réservoir plus 5 litres">+</button></div></div>
           </div>
         </div>`;
     }
@@ -465,12 +466,15 @@ svg.c-logo { background: none; padding: 0; fill: none; }
 .p-top ha-icon { --mdc-icon-size: 20px; color: var(--med-muted); }
 .p-top span { flex: 1; color: var(--med-muted); }
 .p-top b { font-size: 1.1rem; color: var(--med-green); }
-.p-ctl { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-.p-fuels { display: flex; flex-wrap: wrap; gap: 6px; }
-.p-f { all: unset; cursor: pointer; box-sizing: border-box; min-height: 36px; min-width: 52px; display: inline-flex; align-items: center; justify-content: center; padding: 6px 14px; border-radius: 999px; font-size: .9rem; font-weight: 700; border: 1px solid var(--med-line); color: var(--med-muted); }
+.p-ctl { display: grid; gap: 10px; margin-top: 10px; }
+.p-fuels { display: grid; grid-template-columns: repeat(auto-fit, minmax(58px, 1fr)); gap: 6px; }
+.p-f { all: unset; cursor: pointer; box-sizing: border-box; min-height: 36px; display: flex; align-items: center; justify-content: center; padding: 6px 14px; border-radius: 999px; font-size: .9rem; font-weight: 700; border: 1px solid var(--med-line); color: var(--med-muted); }
 .p-f.on { border-color: var(--fc); color: var(--med-text); background: color-mix(in srgb, var(--fc) 18%, transparent); }
 .p-f:focus-visible, .p-step button:focus-visible { outline: 2px solid var(--med-accent, var(--med-blue)); }
-.p-step { margin-left: auto; display: flex; align-items: center; gap: 4px; border: 1px solid var(--med-line); border-radius: 999px; padding: 3px; }
+.p-tank { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 10px; border-top: 1px solid var(--med-line); }
+.p-tank > span { display: inline-flex; align-items: center; gap: 8px; color: var(--med-muted); font-size: .86rem; }
+.p-tank > span ha-icon { --mdc-icon-size: 18px; }
+.p-step { display: flex; align-items: center; gap: 4px; border: 1px solid var(--med-line); border-radius: 999px; padding: 3px; }
 .p-step button { all: unset; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 1.3rem; font-weight: 700; color: var(--med-text); }
 .p-step button:hover { background: var(--med-surface); }
 .p-step span { min-width: 56px; text-align: center; font-weight: 700; font-size: .95rem; }
