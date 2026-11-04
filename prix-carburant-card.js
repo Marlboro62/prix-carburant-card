@@ -11,7 +11,7 @@
  */
 
 (() => {
-const CARD_VERSION = "0.4.2";
+const CARD_VERSION = "0.4.3-beta.1";
 
 /* ------------------------------------------------------------- affichage */
 
@@ -186,6 +186,11 @@ class PrixCarburantCard extends HTMLElement {
   }
 
   /** Capacité du réservoir : choix fait dans la carte, sinon la configuration. */
+  /** Durée de l'historique en jours (2 à 90), toujours un nombre : la valeur brute de la config n'arrive jamais dans le HTML. */
+  _days() {
+    return Math.max(2, Math.min(90, Number(this._config.days) || 30));
+  }
+
   _tankL() {
     return this._tank || Number(this._config.tank) || 50;
   }
@@ -230,7 +235,7 @@ class PrixCarburantCard extends HTMLElement {
   async _loadHistory(ids) {
     if (!ids.length || !this._hass?.callApi || this._histBusy) return;
     this._histBusy = true;
-    const days = Math.max(2, Math.min(90, Number(this._config.days) || 30));
+    const days = this._days();
     const end = Date.now();
     const start = end - days * 86400e3;
     try {
@@ -269,7 +274,7 @@ class PrixCarburantCard extends HTMLElement {
     const h = this._hist;
     const s = (h?.series?.[id] || []).slice();
     const cur = this._num(id);
-    const head = `<div class="chart-h"><span>${esc(fuel.label)} · ${Math.round((h?.end - h?.start) / 86400e3) || this._config.days} jours</span>`;
+    const head = `<div class="chart-h"><span>${esc(fuel.label)} · ${Math.round((h?.end - h?.start) / 86400e3) || this._days()} jours</span>`;
     if (!h || h.error || !s.length) {
       return `<div class="chart">${head}<span></span></div><div class="ch-empty">${h?.error ? `Historique indisponible : ${esc(h.error)}` : h ? "Pas encore d'historique pour ce carburant." : "Chargement de l'historique…"}</div></div>`;
     }
