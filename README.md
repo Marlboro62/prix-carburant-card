@@ -28,6 +28,9 @@
 
 # Carte Prix Carburant
 
+[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz/)
+[![Release](https://img.shields.io/github/v/release/Marlboro62/prix-carburant-card)](https://github.com/Marlboro62/prix-carburant-card/releases)
+
 Carte Lovelace pour Home Assistant qui affiche les **prix de vos stations-service** : un comparatif de vos stations sur votre carburant favori, un prix par carburant avec une couleur selon sa tranche de prix, l'évolution depuis le dernier changement, l'historique des 30 derniers jours, le coût d'un plein réglable et les ruptures de stock.
 
 Elle est conçue pour l'intégration **[Prix Carburant](https://github.com/Aohzan/hass-prixcarburant)** (données officielles prix-carburants.gouv.fr) et trouve vos stations toute seule, quelle que soit l'enseigne. Pour une autre source, les capteurs peuvent être choisis à la main.
